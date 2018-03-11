@@ -1,0 +1,176 @@
+#include<stdio.h>
+#include<graphics.h>
+#include<conio.h>
+#include<math.h>
+#define MAX 10
+
+typedef struct Point{
+    float  x,y;
+} Point;
+void translate(Point[MAX], int, int, int);
+void rotate(Point[MAX], int, float, float, float);
+void scale(Point[MAX], int, float, float,float,float);
+void myline(float, float, float, float);
+void mycircle(float, float, int);
+
+void main()
+{
+
+    Point p[MAX],car[MAX], road[MAX], spokesr[MAX],spokesf[MAX];
+    Point carc[MAX];
+    Point wheelc[MAX];//0 is rear wheel centre, 1 is front
+    Point scalePt[MAX];
+
+    float spokesradius;
+    int ncar,ncarc,nroad,nwheel,nspokes, nscale;
+    int xt,yt,i;
+    float xs,ys;
+    float carangle,sangle;
+    int time,startscale;
+   int gd=DETECT,gm;
+initgraph(&gd,&gm,"d:\\turboc3\\bgi");
+    ncar=8;
+    car[0].x=-5;car[0].y=-30;
+    car[1].x=-5;car[1].y=-50;
+    car[2].x=-40;car[2].y=-50;
+    car[3].x=-60;car[3].y=-80;
+    car[4].x=-90;car[4].y=-80;
+    car[5].x=-110;car[5].y=-50;
+    car[6].x=-135;car[6].y=-50;
+    car[7].x=-135;car[7].y=-30;
+    carangle=-26.5650512*3.14/180; //arc tan of 0.5
+
+    ncarc=1;
+    carc[0].x=-55;carc[0].y=-45;
+
+    spokesradius=15;
+    nwheel=2;
+    wheelc[0].x=-110;wheelc[0].y=-15;
+    wheelc[1].x=-40;wheelc[1].y=-15;
+
+    nspokes=4;
+    spokesr[0].x=-110;spokesr[0].y=0;
+    spokesr[1].x=-110;spokesr[1].y=-30;
+    spokesr[2].x=-125;spokesr[2].y=-15;
+    spokesr[3].x=-95;spokesr[3].y=-15;
+
+    spokesf[0].x=-40;spokesf[0].y=0;
+    spokesf[1].x=-40;spokesf[1].y=-30;
+    spokesf[2].x=-55;spokesf[2].y=-15;
+    spokesf[3].x=-25;spokesf[3].y=-15;
+
+    nscale=1;
+    scalePt[0].x=-20;scalePt[0].y=0;
+    startscale=20;time=0;
+
+    nroad=2;
+    road[0].x=-getmaxx();road[0].y=0;
+    road[1].x=getmaxx();road[1].y=0;
+
+
+    //rotate by an intial angle for slope of the road
+    rotate(car,ncar,carangle, getmaxx()/2, getmaxy()/2);
+    rotate(road,nroad,carangle, getmaxx()/2, getmaxy()/2);
+    rotate(wheelc,nwheel,carangle, getmaxx()/2, getmaxy()/2);
+    rotate(spokesr,nspokes,carangle, getmaxx()/2, getmaxy()/2);
+    rotate(spokesf,nspokes,carangle, getmaxx()/2, getmaxy()/2);
+    rotate(scalePt,nscale,carangle, getmaxx()/2, getmaxy()/2);
+    rotate(carc,ncarc,carangle, getmaxx()/2, getmaxy()/2);
+    sangle=10*3.14/180;
+    xt=4;yt=-2;
+    xs=0.99f;ys=0.99f;
+
+    while (!kbhit()) {
+	//draw car
+	for(i=0; i<ncar-1; i++){
+	    myline(car[i].x,car[i].y,car[i+1].x,car[i+1].y);
+	}
+	myline(car[ncar-1].x,car[ncar-1].y,car[0].x,car[0].y);
+	//draw road
+	myline(road[0].x,road[0].y,road[1].x,road[1].y);
+	//draw wheels
+	mycircle(wheelc[0].x,wheelc[0].y, spokesradius);
+	mycircle(wheelc[1].x,wheelc[1].y, spokesradius);
+	//draw rear wheel spokes
+	myline(spokesr[0].x,spokesr[0].y,spokesr[1].x,spokesr[1].y);
+	myline(spokesr[2].x,spokesr[2].y,spokesr[3].x,spokesr[3].y);
+	//draw front wheel spokes
+	myline(spokesf[0].x,spokesf[0].y,spokesf[1].x,spokesf[1].y);
+	myline(spokesf[2].x,spokesf[2].y,spokesf[3].x,spokesf[3].y);
+
+	//update
+
+	rotate(spokesr, nspokes,sangle, wheelc[0].x, wheelc[0].y);
+	rotate(spokesf, nspokes,sangle, wheelc[1].x, wheelc[1].y);
+
+	translate(car,ncar,xt,yt);
+	translate(wheelc,nwheel,xt,yt);
+	translate(spokesr,nspokes,xt,yt);
+	translate(spokesf,nspokes,xt,yt);
+	translate(scalePt,nscale,xt,yt);
+	translate(carc,ncarc,xt,yt);
+	if(time>startscale){
+	scale(car, ncar, xs,ys,scalePt[0].x,scalePt[0].y);
+	scale(spokesr, nspokes, xs,ys,scalePt[0].x,scalePt[0].y);
+	scale(spokesf, nspokes, xs,ys,scalePt[0].x,scalePt[0].y);
+	scale(wheelc, nwheel, xs,ys,scalePt[0].x,scalePt[0].y);
+	scale(carc, ncarc, xs,ys,scalePt[0].x,scalePt[0].y);
+	spokesradius*=xs;
+	}
+	time++;
+	delay(200);
+	cleardevice();
+    }
+
+    getch();
+    //end
+    getch();
+    closegraph();
+}
+
+void translate(Point p[MAX], int n, int xt, int yt){
+    int i;
+    for(i=0; i<n; i++){
+	p[i].x+=xt;
+	p[i].y+=yt;
+    }
+}
+void rotate(Point p[MAX], int n,float angle, float xr, float yr){
+    int i;
+    float nx1,ny1;
+    for(i=0; i<n; i++){
+	p[i].x-=xr;
+	p[i].y-=yr;
+	nx1=p[i].x*cos(angle)-p[i].y*sin(angle);
+	ny1=p[i].x*sin(angle)+p[i].y*cos(angle);
+	p[i].x=nx1;
+	p[i].y=ny1;
+	p[i].x+=xr;
+	p[i].y+=yr;
+    }
+}
+void scale(Point p[MAX], int n, float xs, float ys,float xc,float yc){
+    int i;
+    for(i=0; i<n; i++){
+	p[i].x-=xc;
+	p[i].y-=yc;
+	p[i].x*=xs;
+	p[i].y*=ys;
+	p[i].x+=xc;
+	p[i].y+=yc;
+    }
+}
+void myline(float x1, float y1, float x2, float y2){
+    //for shifting origin to centre of screen
+    int shiftX,shiftY;
+    shiftX=getmaxx()/2;
+    shiftY=getmaxy()/2;
+    line((int)(x1+shiftX),(int)(y1+shiftY),(int)(x2+shiftX),(int)(y2+shiftY));
+}
+void mycircle(float x, float y, int r){
+    //for shifting origin to centre of screen
+    int shiftX,shiftY;
+    shiftX=getmaxx()/2;
+    shiftY=getmaxy()/2;
+    circle((int)(x+shiftX),(int)(y+shiftY),r);
+}
